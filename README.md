@@ -1,5 +1,7 @@
 # MoonTV(Branch)
 
+原项目地址https://github.com/MoonTechLab/LunaTV
+
 <div align="center">
   <img src="public/logo.png" alt="LibreTV Logo" width="120">
 </div>
@@ -26,7 +28,7 @@
 - ❤️ **收藏 + 继续观看**：支持 Redis/Upstash 存储，多端同步进度。
 - 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
 - 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
-- 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel、Netlify。
+- 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel、Netlify、cloudflare。
 - 👿 **智能去广告**：自动跳过视频中的切片广告（实验性）
 
 <details>
@@ -46,10 +48,13 @@
     - [Vercel 部署](#vercel-部署)
       - [普通部署（localstorage）](#普通部署localstorage)
       - [Upstash Redis 支持](#upstash-redis-支持)
-    - [Netlify 部署](#netlify-部署)
+    - [Netlify 部署(推荐)](#netlify-部署推荐)
       - [普通部署（localstorage）](#普通部署localstorage-1)
       - [Upstash Redis 支持](#upstash-redis-支持-1)
-    - [Docker 部署(目前版本仅为2.7.4)](#docker-部署目前版本仅为274)
+    - [Cloudflare 部署](#cloudflare-部署)
+      - [普通部署（localstorage）](#普通部署localstorage-2)
+      - [D1 支持](#d1-支持)
+    - [Docker 部署](#docker-部署)
       - [直接运行（最简单，localstorage）](#直接运行最简单localstorage)
       - [Docker Compose](#docker-compose)
         - [local storage 存储](#local-storage-存储)
@@ -75,18 +80,20 @@
 | 语言      | TypeScript 4                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 代码质量  | ESLint · Prettier · Jest                                                                              |
-| 部署      | Docker · Vercel ·  pages                                                                    |
+| 部署      | Docker · Vercel · pages                                                                               |
 
 ## 部署
 
-本项目**支持 Vercel、Docker、Netlify** 部署。
+本项目**支持 Vercel、Docker、Netlify、Cloudflare** 部署。
 
 存储支持矩阵
 
-|                   | Docker | Vercel | Netlify |
-| :---------------: | :----: | :----: | :-----: |
-|    原生 redis     |   ✅   |        |         |
-|   Upstash Redis   |   ☑️   |   ✅   |   ✅    |
+|               | Docker | Vercel | Cloudflare |
+| :-----------: | :----: | :----: | :--------: |
+| localstorage  |   ✅   |   ✅   |     ✅     |
+|  原生 redis   |   ✅   |        |            |
+| Cloudflare D1 |        |        |     ✅     |
+| Upstash Redis |   ☑️   |   ✅   |     ✅     |
 
 ✅：经测试支持
 
@@ -114,7 +121,7 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **upstash**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-### Netlify 部署
+### Netlify 部署(推荐)
 
 #### 普通部署（localstorage）
 
@@ -135,7 +142,31 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **upstash**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-### Docker 部署(目前版本仅为2.7.4)
+### Cloudflare 部署
+
+**Cloudflare Pages 的环境变量尽量设置为密钥而非文本**
+
+#### 普通部署（localstorage）
+
+1. **Fork** 本仓库到你的 GitHub 账户。
+2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建
+3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库
+4. 构建命令填写 **pnpm run pages:build**，预设框架为无，**构建输出目录**为 `.vercel/output/static`
+5. 保持默认设置完成首次部署。进入设置，将兼容性标志设置为 `nodejs_compat`，无需选择，直接粘贴
+6. 首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。
+7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
+8. 每次 Push 到 `main` 分支将自动触发重新构建。
+
+#### D1 支持
+
+0. 完成普通部署并成功访问
+1. 点击 **存储和数据库 -> D1 SQL 数据库**，创建一个新的数据库，名称随意
+2. 进入刚创建的数据库，点击左上角的 Explore Data，将[d1-init](d1-init.sql) 中的内容粘贴到 Query 窗口后点击 **Run All**，等待运行完成
+3. 返回你的 pages 项目，进入 **设置 -> 绑定**，添加绑定 D1 数据库，选择你刚创建的数据库，变量名称填 **DB**
+4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号
+5. 重试部署
+
+### Docker 部署
 
 #### 直接运行（最简单，localstorage）
 
@@ -197,7 +228,7 @@ services:
 | UPSTASH_TOKEN                       | upstash redis 连接 token                     | 连接 token                       | 空                                                                                                                         |
 | NEXT_PUBLIC_ENABLE_REGISTER         | 是否开放注册，仅在非 localstorage 部署时生效 | true / false                     | false                                                                                                                      |
 | NEXT_PUBLIC_SEARCH_MAX_PAGE         | 搜索接口可拉取的最大页数                     | 1-50                             | 5                                                                                                                          |
-| NEXT_PUBLIC_DOUBAN_PROXY_TYPE       | 豆瓣数据源请求方式                           | 见下方                           |                                                                                               direct                      |
+| NEXT_PUBLIC_DOUBAN_PROXY_TYPE       | 豆瓣数据源请求方式                           | 见下方                           | direct                                                                                                                     |
 | NEXT_PUBLIC_DOUBAN_PROXY            | 自定义豆瓣数据代理 URL                       | url prefix                       | (空)                                                                                                                       |
 | NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE | 豆瓣图片代理类型                             | 见下方                           | direct                                                                                                                     |
 | NEXT_PUBLIC_DOUBAN_IMAGE_PROXY      | 自定义豆瓣图片代理 URL                       | url prefix                       | (空)                                                                                                                       |
@@ -223,12 +254,11 @@ NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE 选项解释：
 
 ## 配置说明
 
-如果为localstorage模式所有可自定义项集中在根目录的 `config.json` 中(localstorage模式)
-非localstorage可在部署好的网页中直接配置
+如果为 localstorage 模式所有可自定义项集中在根目录的 `config.json` 中(localstorage 模式)
+非 localstorage 可在部署好的网页中直接配置
 
 ```json
 {
-  "cache_time": 7200,
   "api_site": {
     "dyttzy": {
       "api": "http://caiji.dyttzyapi.com/api.php/provide/vod",
@@ -283,7 +313,9 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 
 目前该项目可以配合 [OrionTV](https://github.com/zimplexing/OrionTV) 在 Android TV 上使用，可以直接作为 OrionTV 后端
 
-暂时收藏夹与播放记录和网页端隔离，后续会支持同步用户数据
+## Selene 使用
+
+该项目已兼容 [Selene](https://github.com/MoonTechLab/Selene) 在移动端上使用，可以直接作为 Selene 后端
 
 ## Roadmap
 
